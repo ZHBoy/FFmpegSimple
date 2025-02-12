@@ -11,9 +11,13 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Button
-import android.widget.MediaController
-import android.widget.VideoView
+import android.widget.SeekBar
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackParameters
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
 import com.zhhh.binder.R
@@ -23,7 +27,6 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-
 
 /**
  * Client端的实例获取和绑定
@@ -35,6 +38,7 @@ class MainActivity : AppCompatActivity() {
 
     //当前选择的视频文件
     private var currentUri: Uri? = null
+    private var player: ExoPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,7 +73,8 @@ class MainActivity : AppCompatActivity() {
                     // CANCEL
                 } else {
                     // FAILURE
-                    Log.d(TAG, String.format(
+                    Log.d(
+                        TAG, String.format(
                             "Command failed with state %s and rc %s.%s",
                             session.state,
                             session.returnCode,
@@ -78,7 +83,6 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
             }
-
         }
 
         findViewById<Button>(R.id.btSelect).setOnClickListener {
@@ -109,16 +113,40 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startVideo(uri: Uri) {
-        val videoView: VideoView = findViewById(R.id.videoView)
-
-        // 设置视频路径
-        videoView.setVideoURI(uri)
-        // 添加媒体控制器（播放/暂停/进度条）
-        val mediaController = MediaController(this)
-        mediaController.setAnchorView(videoView)
-        videoView.setMediaController(mediaController)
+        val playerView: PlayerView = findViewById(R.id.player_view)
+        // 创建 ExoPlayer 实例
+        player = ExoPlayer.Builder(this).build()
+        playerView.player = player
+        // 设置要播放的媒体项
+        val mediaItem = MediaItem.fromUri(uri)
+        player?.setMediaItem(mediaItem)
+        // 准备播放器
+        player?.prepare()
         // 开始播放
-        videoView.start()
+        player?.play()
+
+        handleSpeed()
+    }
+
+    /**
+     * 播放速度控制
+     */
+    private fun handleSpeed() {
+        val speedSeekBar = findViewById<SeekBar>(R.id.speed_seek_bar)
+        speedSeekBar.max = 20 // 范围 0.1x - 2.0x
+        speedSeekBar.progress = 10 // 默认 1.0x
+        speedSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {}
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                val progress = seekBar?.progress ?: 10
+                val speed = (progress + 1) / 10.0f
+                val playbackParameters = PlaybackParameters(speed)
+                player?.playbackParameters = playbackParameters
+                Toast.makeText(this@MainActivity, speed.toString() + "x", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     /**

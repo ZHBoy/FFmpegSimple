@@ -6,10 +6,20 @@
     android:layout_height="match_parent"
     tools:context=".ui.MainActivity">
 
-    <VideoView
-        android:id="@+id/videoView"
+    <!-- 视频缩放模式，可选值有 fill、fit、fixed_width、fixed_height 等 -->
+    <!-- 是否显示播放控制器 -->
+    <!-- 自定义播放控制器布局 -->
+    <!-- 视频加载时的背景颜色 -->
+    <!-- 视频渲染的表面类型，可选值有 surface_view、texture_view -->
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/player_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        app:controller_layout_id="@layout/custom_player_controller"
+        app:resize_mode="fill"
+        app:shutter_background_color="@android:color/black"
+        app:surface_type="texture_view"
+        app:use_controller="true" />
 
     <Button
         android:id="@+id/btStart"
