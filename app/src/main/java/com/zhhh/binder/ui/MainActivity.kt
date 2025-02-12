@@ -209,4 +209,17 @@ class MainActivity : AppCompatActivity() {
         }
         return null
     }
+
+    override fun onStop() {
+        super.onStop()
+        player?.stop()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        player?.stop()
+        player?.release()
+        player = null
+    }
+
 }
